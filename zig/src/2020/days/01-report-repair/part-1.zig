@@ -2,13 +2,30 @@ const std = @import("std");
 const heap = std.heap;
 const mem = std.mem;
 const fs = std.fs;
-const io = std.Io;
+
+pub fn main() !void {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const entries = try parseInput(allocator);
+    defer allocator.free(entries);
+
+    for (entries, 0..) |entry, i| {
+        for (entries, i + 1..) |other_entry, j| {
+            if (checkSum2020(entry, other_entry)) {
+                std.debug.print("Found entries at {d} and {d}: {d} + {d} = 2020\n", .{ i, j, entry, other_entry });
+                std.debug.print("The product is: {d}\n", .{entry * other_entry});
+            }
+        }
+    }
+}
 
 fn checkSum2020(a: i32, b: i32) bool {
     return a + b == 2020;
 }
 
-fn readInput(allocator: mem.Allocator) ![]i32 {
+fn parseInput(allocator: mem.Allocator) ![]i32 {
 
     // open/ close file so we can read the content
     const file = try fs.cwd().openFile("input.txt", .{});
@@ -31,22 +48,4 @@ fn readInput(allocator: mem.Allocator) ![]i32 {
     }
 
     return try records.toOwnedSlice(allocator);
-}
-
-pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
-
-    const entries = try readInput(allocator);
-    defer allocator.free(entries);
-
-    for (entries, 0..) |entry, i| {
-        for (entries, i + 1..) |other_entry, j| {
-            if (checkSum2020(entry, other_entry)) {
-                std.debug.print("Found entries at {d} and {d}: {d} + {d} = 2020\n", .{ i, j, entry, other_entry });
-                std.debug.print("The product is: {d}\n", .{entry * other_entry});
-            }
-        }
-    }
 }
